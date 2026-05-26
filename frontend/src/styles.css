@@ -1,0 +1,120 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f5f6f8;
+  color: #222;
+}
+a { color: #2563eb; text-decoration: none; }
+button {
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+button.secondary { background: #e5e7eb; color: #111; }
+button.danger { background: #dc2626; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+input, select, textarea {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+}
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px;
+  background: #1f2937;
+  color: white;
+  padding: 20px;
+}
+.sidebar h2 { font-size: 18px; margin: 0 0 24px; }
+.sidebar a {
+  display: block;
+  color: #d1d5db;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.sidebar a.active, .sidebar a:hover { background: #374151; color: white; }
+.main { flex: 1; padding: 24px; }
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin-bottom: 16px;
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+th { background: #f9fafb; font-weight: 600; font-size: 13px; color: #6b7280; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.stat { font-size: 28px; font-weight: 600; color: #1f2937; }
+.stat-label { color: #6b7280; font-size: 13px; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #e5e7eb;
+  font-size: 12px;
+}
+.badge.admin { background: #fee2e2; color: #991b1b; }
+.badge.uildver { background: #dbeafe; color: #1e40af; }
+.badge.borluulagch { background: #d1fae5; color: #065f46; }
+.error { color: #dc2626; font-size: 13px; margin-top: 6px; }
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  width: 380px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+.login-card h1 { margin-top: 0; text-align: center; }
+.login-card .form-group { margin-bottom: 16px; }
+.login-card label { display: block; font-size: 13px; margin-bottom: 6px; color: #374151; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.topbar h1 { margin: 0; font-size: 22px; }
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+.modal { background: white; border-radius: 10px; padding: 24px; width: 420px; max-width: 90vw; }
+.modal h3 { margin-top: 0; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: #374151; }
+.bar-chart { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.bar-row { display: grid; grid-template-columns: 140px 1fr 48px; align-items: center; gap: 12px; }
+.bar-label { font-size: 13px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { background: #f3f4f6; border-radius: 6px; height: 18px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; min-width: 2px; }
+.bar-value { font-size: 13px; font-weight: 600; color: #1f2937; text-align: right; }
+.warning-card {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  color: #78350f;
+}
+.low-stock-list { display: flex; flex-direction: column; gap: 6px; }
+.low-stock-item {
+  display: flex; gap: 12px; align-items: center;
+  padding: 6px 10px; background: rgba(255,255,255,0.6); border-radius: 6px;
+  font-size: 14px;
+}
+.low-stock-item.empty { background: #fee2e2; color: #991b1b; }
+.low-stock-item > span:first-child { flex: 1; font-weight: 500; }
+tr.low-stock-row { background: #fef3c7; }
+tr.low-stock-row.empty { background: #fee2e2; }
