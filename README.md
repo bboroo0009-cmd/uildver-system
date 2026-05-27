@@ -52,10 +52,7 @@ npm install
 npm run dev       # http://localhost:5173
 ```
 
-Brаузераар `http://localhost:5173` нээж нэвтэрнэ:
-
-- **admin / admin123**
-- **uildver / uildver123**
+Brаузераар `http://localhost:5173` нээж нэвтэрнэ.
 
 ---
 
