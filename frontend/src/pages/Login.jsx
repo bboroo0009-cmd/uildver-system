@@ -43,9 +43,6 @@ export default function Login() {
         <button type="submit" style={{ width: '100%', marginTop: 8 }} disabled={loading}>
           {loading ? 'Нэвтэрч байна…' : 'Нэвтрэх'}
         </button>
-        <div style={{ marginTop: 16, fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
-          Жишээ: admin / admin123
-        </div>
       </form>
     </div>
   );
