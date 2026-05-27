@@ -92,7 +92,7 @@ Vercel автоматаар дахин deploy хийнэ.
 
 Локал PostgreSQL-ээ `backend/.env`-д буцааж тохируулна:
 ```
-DATABASE_URL=postgresql://postgres:Vinc%409970@localhost:5432/uildver
+DATABASE_URL=postgresql://postgres:<YOUR-LOCAL-PASSWORD>@localhost:5432/uildver
 ```
 Дараа нь:
 ```powershell
