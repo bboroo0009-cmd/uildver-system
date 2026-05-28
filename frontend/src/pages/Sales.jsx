@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import BarChart from '../components/BarChart.jsx';
+import { formatMoney } from '../utils/format.js';
 
 export default function Sales() {
   const [data, setData] = useState(null);
@@ -33,6 +34,10 @@ export default function Sales() {
 
       <div className="grid-cards">
         <div className="card">
+          <div className="stat-label">Нийт орлого</div>
+          <div className="stat">{formatMoney(data.total_revenue)}</div>
+        </div>
+        <div className="card">
           <div className="stat-label">Нийт зарагдсан ширхэг</div>
           <div className="stat">{data.total_sold}</div>
         </div>
@@ -43,17 +48,17 @@ export default function Sales() {
       </div>
 
       <div className="card">
-        <h3>Бараа бүрийн борлуулалт</h3>
+        <h3>Бараа бүрийн орлого</h3>
         <BarChart
-          data={data.by_product.map((p) => ({ label: p.name, value: p.quantity_sold }))}
+          data={data.by_product.map((p) => ({ label: `${p.name} (${p.quantity_sold}ш)`, value: Math.round(p.revenue) }))}
           emptyText="Борлуулалт хараахан алга"
         />
       </div>
 
       <div className="card">
-        <h3>Борлуулагч бүрийн борлуулалт</h3>
+        <h3>Борлуулагч бүрийн орлого</h3>
         <BarChart
-          data={data.by_distributor.map((d) => ({ label: d.name, value: d.quantity_sold }))}
+          data={data.by_distributor.map((d) => ({ label: `${d.name} (${d.quantity_sold}ш)`, value: Math.round(d.revenue) }))}
           emptyText="Борлуулалт хараахан алга"
         />
       </div>
@@ -66,11 +71,11 @@ export default function Sales() {
               <div style={{ fontWeight: 600, marginBottom: 8 }}>
                 {d.name}
                 <span style={{ color: '#6b7280', fontWeight: 400, fontSize: 13, marginLeft: 8 }}>
-                  (нийт {d.quantity_sold} ширхэг)
+                  (нийт {d.quantity_sold}ш — {formatMoney(d.revenue)})
                 </span>
               </div>
               <BarChart
-                data={d.products.map((p) => ({ label: p.product_name, value: p.quantity_sold }))}
+                data={d.products.map((p) => ({ label: `${p.product_name} (${p.quantity_sold}ш)`, value: Math.round(p.revenue) }))}
               />
             </div>
           ))}
@@ -96,17 +101,19 @@ export default function Sales() {
         <table>
           <thead>
             <tr>
-              <th>Огноо</th><th>Бараа</th><th>Тоо</th><th>Борлуулагч</th><th>Хэн</th><th>Тэмдэглэл</th>
+              <th>Огноо</th><th>Бараа</th><th>Тоо</th><th>Нэгж үнэ</th><th>Нийт</th><th>Борлуулагч</th><th>Хэн</th><th>Тэмдэглэл</th>
             </tr>
           </thead>
           <tbody>
             {filteredTx.length === 0 ? (
-              <tr><td colSpan="6" style={{ color: '#6b7280' }}>Гүйлгээ алга</td></tr>
+              <tr><td colSpan="8" style={{ color: '#6b7280' }}>Гүйлгээ алга</td></tr>
             ) : filteredTx.map((t) => (
               <tr key={t.id}>
                 <td>{new Date(t.created_at).toLocaleString('mn-MN')}</td>
                 <td>{t.product_name}</td>
                 <td>{t.quantity}</td>
+                <td>{formatMoney(t.unit_price)}</td>
+                <td><strong>{formatMoney(t.total_price)}</strong></td>
                 <td>{t.distributor_name || '—'}</td>
                 <td>{t.username || '—'}</td>
                 <td>{t.note || ''}</td>

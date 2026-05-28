@@ -9,7 +9,7 @@ export default function Distributors() {
   const [form, setForm] = useState({ name: '', phone: '', location: '' });
   const [transferFor, setTransferFor] = useState(null);
   const [sellFor, setSellFor] = useState(null);
-  const [actionData, setActionData] = useState({ product_id: '', quantity: '', note: '' });
+  const [actionData, setActionData] = useState({ product_id: '', quantity: '', note: '', unit_price: '' });
   const [search, setSearch] = useState('');
   const user = auth.getUser();
   const canEdit = ['admin', 'uildver'].includes(user?.role);
@@ -34,19 +34,32 @@ export default function Distributors() {
     const target = transferFor || sellFor;
     const endpoint = transferFor ? 'transfer' : 'sell';
     try {
+      const body = {
+        product_id: parseInt(actionData.product_id, 10),
+        quantity: parseInt(actionData.quantity, 10),
+        note: actionData.note,
+      };
+      if (sellFor && actionData.unit_price !== '') {
+        body.unit_price = Number(actionData.unit_price);
+      }
       await api(`/distributors/${target.id}/${endpoint}`, {
         method: 'POST',
-        body: JSON.stringify({
-          product_id: parseInt(actionData.product_id, 10),
-          quantity: parseInt(actionData.quantity, 10),
-          note: actionData.note,
-        }),
+        body: JSON.stringify(body),
       });
       setTransferFor(null);
       setSellFor(null);
-      setActionData({ product_id: '', quantity: '', note: '' });
+      setActionData({ product_id: '', quantity: '', note: '', unit_price: '' });
       load();
     } catch (err) { setError(err.message); }
+  };
+
+  const onSelectProductForAction = (productId) => {
+    const p = products.find((x) => String(x.id) === String(productId));
+    setActionData({
+      ...actionData,
+      product_id: productId,
+      unit_price: sellFor && p ? String(p.sale_price ?? '') : actionData.unit_price,
+    });
   };
 
   const remove = async (id) => {
@@ -133,7 +146,7 @@ export default function Distributors() {
             <form onSubmit={submitAction}>
               <div className="form-group">
                 <label>Бүтээгдэхүүн</label>
-                <select value={actionData.product_id} onChange={(e) => setActionData({ ...actionData, product_id: e.target.value })} required>
+                <select value={actionData.product_id} onChange={(e) => onSelectProductForAction(e.target.value)} required>
                   <option value="">— сонгох —</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -144,6 +157,22 @@ export default function Distributors() {
                 <label>Тоо ширхэг</label>
                 <input type="number" min="1" value={actionData.quantity} onChange={(e) => setActionData({ ...actionData, quantity: e.target.value })} required />
               </div>
+              {sellFor && (
+                <div className="form-group">
+                  <label>Нэгжийн үнэ (₮)</label>
+                  <input
+                    type="number" min="0" step="0.01"
+                    value={actionData.unit_price}
+                    onChange={(e) => setActionData({ ...actionData, unit_price: e.target.value })}
+                    placeholder="Барааны үнээс автоматаар"
+                  />
+                  {actionData.quantity && actionData.unit_price && (
+                    <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>
+                      Нийт: <strong>{new Intl.NumberFormat('mn-MN').format(Math.round(Number(actionData.quantity) * Number(actionData.unit_price)))}₮</strong>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="form-group">
                 <label>Тэмдэглэл</label>
                 <input value={actionData.note} onChange={(e) => setActionData({ ...actionData, note: e.target.value })} />

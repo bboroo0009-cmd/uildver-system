@@ -15,12 +15,17 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT,
   is_archived BOOLEAN NOT NULL DEFAULT FALSE,
   low_stock_threshold INTEGER NOT NULL DEFAULT 5 CHECK (low_stock_threshold >= 0),
+  sale_price NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (sale_price >= 0),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Аль хэдийн үүссэн products table-д шинэ багана нэмэх
 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS low_stock_threshold INTEGER NOT NULL DEFAULT 5 CHECK (low_stock_threshold >= 0);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (sale_price >= 0);
+
+-- Гүйлгээ дээр үнэ хадгалах (зарах үед бичигдэнэ)
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS unit_price NUMERIC(12, 2);
 
 -- Агуулахын нөөц (үйлдвэрт хэдэн ширхэг үлдэгдэлтэй)
 CREATE TABLE IF NOT EXISTS warehouse_stock (
@@ -54,6 +59,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   distributor_id INTEGER REFERENCES distributors(id),
   type VARCHAR(20) NOT NULL CHECK (type IN ('produce', 'transfer', 'sell', 'return')),
   quantity INTEGER NOT NULL,
+  unit_price NUMERIC(12, 2),
   note TEXT,
   user_id INTEGER REFERENCES users(id),
   created_at TIMESTAMPTZ DEFAULT NOW()

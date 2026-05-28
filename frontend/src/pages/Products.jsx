@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api, auth } from '../api/client.js';
 import BarChart from '../components/BarChart.jsx';
+import { formatMoney } from '../utils/format.js';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [distributors, setDistributors] = useState([]);
   const [error, setError] = useState('');
-  const [newProduct, setNewProduct] = useState({ name: '', description: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', description: '', sale_price: '' });
   const [produceFor, setProduceFor] = useState(null);
   const [produceQty, setProduceQty] = useState('');
   const [produceNote, setProduceNote] = useState('');
@@ -32,7 +33,24 @@ export default function Products() {
     e.preventDefault();
     try {
       await api('/products', { method: 'POST', body: JSON.stringify(newProduct) });
-      setNewProduct({ name: '', description: '' });
+      setNewProduct({ name: '', description: '', sale_price: '' });
+      load();
+    } catch (err) { setError(err.message); }
+  };
+
+  const editPrice = async (p) => {
+    const input = prompt(
+      `"${p.name}" — нэгжийн үнэ оруулна уу (₮):`,
+      String(p.sale_price ?? 0)
+    );
+    if (input === null) return;
+    const val = Number(input);
+    if (Number.isNaN(val) || val < 0) { alert('Тоо оруулна уу.'); return; }
+    try {
+      await api(`/products/${p.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ sale_price: val }),
+      });
       load();
     } catch (err) { setError(err.message); }
   };
@@ -101,6 +119,12 @@ export default function Products() {
               onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
               style={{ flex: 2 }}
             />
+            <input
+              type="number" min="0" step="0.01"
+              placeholder="Үнэ (₮)" value={newProduct.sale_price}
+              onChange={(e) => setNewProduct({ ...newProduct, sale_price: e.target.value })}
+              style={{ flex: 1 }}
+            />
             <button type="submit">Нэмэх</button>
           </form>
         </div>
@@ -141,7 +165,7 @@ export default function Products() {
         <table>
           <thead>
             <tr>
-              <th>Нэр</th><th>Тайлбар</th><th>Агуулахад</th><th>Борлуулагчид</th><th>Босго</th>
+              <th>Нэр</th><th>Тайлбар</th><th>Үнэ</th><th>Агуулахад</th><th>Борлуулагчид</th><th>Босго</th>
               {canEdit && <th>Үйлдэл</th>}
             </tr>
           </thead>
@@ -160,12 +184,14 @@ export default function Products() {
                     {isLow && !isEmpty && <span style={{ marginLeft: 8, fontSize: 12, color: '#78350f' }}>● Багасч байна</span>}
                   </td>
                   <td>{p.description}</td>
+                  <td><strong>{formatMoney(p.sale_price)}</strong></td>
                   <td>{wh}</td>
                   <td>{p.total_distributed}</td>
                   <td>{threshold}</td>
                   {canEdit && (
                     <td>
                       <button onClick={() => setProduceFor(p)} style={{ marginRight: 6 }}>Үйлдвэрлэв</button>
+                      <button className="secondary" onClick={() => editPrice(p)} style={{ marginRight: 6 }}>Үнэ</button>
                       <button className="secondary" onClick={() => editThreshold(p)} style={{ marginRight: 6 }}>Босго</button>
                       {user.role === 'admin' && (
                         <button className="danger" onClick={() => remove(p.id, p.name)}>Устгах</button>

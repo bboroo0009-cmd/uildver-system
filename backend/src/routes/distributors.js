@@ -97,10 +97,17 @@ router.post('/:id/transfer', authRequired, requireRole('admin', 'uildver'), asyn
 
 // Борлуулагч бүтээгдэхүүн зарсныг бүртгэх
 router.post('/:id/sell', authRequired, async (req, res) => {
-  const { product_id, quantity, note } = req.body || {};
+  const { product_id, quantity, note, unit_price } = req.body || {};
   const qty = parseInt(quantity, 10);
   if (!product_id || !qty || qty <= 0) {
     return res.status(400).json({ error: 'product_id, quantity шаардлагатай' });
+  }
+  let price = null;
+  if (unit_price !== undefined && unit_price !== null && unit_price !== '') {
+    price = Number(unit_price);
+    if (Number.isNaN(price) || price < 0) {
+      return res.status(400).json({ error: 'Үнэ буруу' });
+    }
   }
 
   const client = await pool.connect();
@@ -115,18 +122,22 @@ router.post('/:id/sell', authRequired, async (req, res) => {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Борлуулагчид хангалттай нөөц алга' });
     }
+    if (price === null) {
+      const p = await client.query('SELECT sale_price FROM products WHERE id = $1', [product_id]);
+      price = p.rows[0] ? Number(p.rows[0].sale_price) : 0;
+    }
     await client.query(
       `UPDATE distributor_stock SET quantity = quantity - $1, updated_at = NOW()
        WHERE distributor_id = $2 AND product_id = $3`,
       [qty, req.params.id, product_id]
     );
     await client.query(
-      `INSERT INTO transactions (product_id, distributor_id, type, quantity, note, user_id)
-       VALUES ($1, $2, 'sell', $3, $4, $5)`,
-      [product_id, req.params.id, qty, note || null, req.user.id]
+      `INSERT INTO transactions (product_id, distributor_id, type, quantity, unit_price, note, user_id)
+       VALUES ($1, $2, 'sell', $3, $4, $5, $6)`,
+      [product_id, req.params.id, qty, price, note || null, req.user.id]
     );
     await client.query('COMMIT');
-    res.json({ ok: true });
+    res.json({ ok: true, unit_price: price, total: price * qty });
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

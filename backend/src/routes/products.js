@@ -7,6 +7,7 @@ const router = Router();
 router.get('/', authRequired, async (_req, res) => {
   const { rows } = await query(`
     SELECT p.id, p.name, p.description, p.low_stock_threshold,
+           p.sale_price::float8 AS sale_price,
            COALESCE(w.quantity, 0) AS warehouse_quantity,
            COALESCE(d.total_distributed, 0) AS total_distributed
     FROM products p
@@ -22,12 +23,16 @@ router.get('/', authRequired, async (_req, res) => {
 });
 
 router.post('/', authRequired, requireRole('admin', 'uildver'), async (req, res) => {
-  const { name, description } = req.body || {};
+  const { name, description, sale_price } = req.body || {};
   if (!name) return res.status(400).json({ error: 'Нэр шаардлагатай' });
+  const price = sale_price !== undefined && sale_price !== null && sale_price !== ''
+    ? Number(sale_price)
+    : 0;
+  if (Number.isNaN(price) || price < 0) return res.status(400).json({ error: 'Үнэ буруу' });
   try {
     const { rows } = await query(
-      'INSERT INTO products (name, description) VALUES ($1, $2) RETURNING *',
-      [name, description || null]
+      'INSERT INTO products (name, description, sale_price) VALUES ($1, $2, $3) RETURNING *',
+      [name, description || null, price]
     );
     await query(
       'INSERT INTO warehouse_stock (product_id, quantity) VALUES ($1, 0) ON CONFLICT DO NOTHING',
@@ -41,7 +46,7 @@ router.post('/', authRequired, requireRole('admin', 'uildver'), async (req, res)
 });
 
 router.put('/:id', authRequired, requireRole('admin', 'uildver'), async (req, res) => {
-  const { name, description, low_stock_threshold } = req.body || {};
+  const { name, description, low_stock_threshold, sale_price } = req.body || {};
   let threshold = null;
   if (low_stock_threshold !== undefined && low_stock_threshold !== null && low_stock_threshold !== '') {
     threshold = parseInt(low_stock_threshold, 10);
@@ -49,13 +54,21 @@ router.put('/:id', authRequired, requireRole('admin', 'uildver'), async (req, re
       return res.status(400).json({ error: 'low_stock_threshold буруу' });
     }
   }
+  let price = null;
+  if (sale_price !== undefined && sale_price !== null && sale_price !== '') {
+    price = Number(sale_price);
+    if (Number.isNaN(price) || price < 0) {
+      return res.status(400).json({ error: 'Үнэ буруу' });
+    }
+  }
   const { rows } = await query(
     `UPDATE products SET
        name = COALESCE($1, name),
        description = COALESCE($2, description),
-       low_stock_threshold = COALESCE($3, low_stock_threshold)
-     WHERE id = $4 RETURNING *`,
-    [name, description, threshold, req.params.id]
+       low_stock_threshold = COALESCE($3, low_stock_threshold),
+       sale_price = COALESCE($4, sale_price)
+     WHERE id = $5 RETURNING *`,
+    [name, description, threshold, price, req.params.id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Олдсонгүй' });
   res.json(rows[0]);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
+import { formatMoney } from '../utils/format.js';
 
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
@@ -49,6 +50,10 @@ export default function Dashboard() {
 
       <div className="grid-cards">
         <div className="card">
+          <div className="stat-label">Нийт орлого</div>
+          <div className="stat" style={{ color: '#16a34a' }}>{formatMoney(summary.total_revenue || 0)}</div>
+        </div>
+        <div className="card">
           <div className="stat-label">Агуулахын нийт нөөц</div>
           <div className="stat">{totalWarehouse}</div>
         </div>
@@ -89,7 +94,7 @@ export default function Dashboard() {
         <h3>Сүүлийн гүйлгээ</h3>
         <table>
           <thead>
-            <tr><th>Огноо</th><th>Төрөл</th><th>Бүтээгдэхүүн</th><th>Тоо</th><th>Борлуулагч</th><th>Хэн</th></tr>
+            <tr><th>Огноо</th><th>Төрөл</th><th>Бүтээгдэхүүн</th><th>Тоо</th><th>Үнэ</th><th>Борлуулагч</th><th>Хэн</th></tr>
           </thead>
           <tbody>
             {summary.recent_transactions.map((t) => (
@@ -98,6 +103,7 @@ export default function Dashboard() {
                 <td>{typeLabel[t.type] || t.type}</td>
                 <td>{t.product_name}</td>
                 <td>{t.quantity}</td>
+                <td>{t.type === 'sell' && t.unit_price ? formatMoney(t.quantity * t.unit_price) : '—'}</td>
                 <td>{t.distributor_name || '—'}</td>
                 <td>{t.username || '—'}</td>
               </tr>
