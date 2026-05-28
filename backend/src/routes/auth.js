@@ -60,4 +60,27 @@ router.get('/users', authRequired, requireRole('admin'), async (_req, res) => {
   res.json(rows);
 });
 
+router.put('/users/:id/password', authRequired, requireRole('admin'), async (req, res) => {
+  const { password } = req.body || {};
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'Нууц үг 6-аас доошгүй тэмдэгт байх ёстой' });
+  }
+  const hash = await bcrypt.hash(password, 10);
+  const { rows } = await query(
+    'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, username',
+    [hash, req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Олдсонгүй' });
+  res.json({ ok: true, username: rows[0].username });
+});
+
+router.delete('/users/:id', authRequired, requireRole('admin'), async (req, res) => {
+  if (parseInt(req.params.id, 10) === req.user.id) {
+    return res.status(400).json({ error: 'Өөрийгөө устгах боломжгүй' });
+  }
+  const { rowCount } = await query('DELETE FROM users WHERE id = $1', [req.params.id]);
+  if (rowCount === 0) return res.status(404).json({ error: 'Олдсонгүй' });
+  res.json({ ok: true });
+});
+
 export default router;

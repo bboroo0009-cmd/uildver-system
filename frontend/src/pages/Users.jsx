@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api/client.js';
+import { api, auth } from '../api/client.js';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ username: '', password: '', full_name: '', role: 'uildver' });
   const [error, setError] = useState('');
+  const me = auth.getUser();
 
   const load = () => api('/auth/users').then(setUsers).catch((e) => setError(e.message));
   useEffect(() => { load(); }, []);
@@ -14,6 +15,24 @@ export default function Users() {
     try {
       await api('/auth/users', { method: 'POST', body: JSON.stringify(form) });
       setForm({ username: '', password: '', full_name: '', role: 'uildver' });
+      load();
+    } catch (err) { setError(err.message); }
+  };
+
+  const changePassword = async (u) => {
+    const pass = prompt(`"${u.username}" хэрэглэгчийн шинэ нууц үг (6-аас дээш тэмдэгт):`);
+    if (pass === null) return;
+    if (pass.length < 6) { alert('Нууц үг 6-аас доошгүй байх ёстой.'); return; }
+    try {
+      await api(`/auth/users/${u.id}/password`, { method: 'PUT', body: JSON.stringify({ password: pass }) });
+      alert(`${u.username}-ийн нууц үг шинэчлэгдсэн.`);
+    } catch (err) { setError(err.message); }
+  };
+
+  const removeUser = async (u) => {
+    if (!confirm(`"${u.username}" хэрэглэгчийг устгах уу?`)) return;
+    try {
+      await api(`/auth/users/${u.id}`, { method: 'DELETE' });
       load();
     } catch (err) { setError(err.message); }
   };
@@ -41,7 +60,7 @@ export default function Users() {
 
       <div className="card">
         <table>
-          <thead><tr><th>ID</th><th>Нэр</th><th>Овог нэр</th><th>Эрх</th><th>Үүсгэсэн</th></tr></thead>
+          <thead><tr><th>ID</th><th>Нэр</th><th>Овог нэр</th><th>Эрх</th><th>Үүсгэсэн</th><th>Үйлдэл</th></tr></thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.id}>
@@ -50,6 +69,12 @@ export default function Users() {
                 <td>{u.full_name || '—'}</td>
                 <td><span className={`badge ${u.role}`}>{u.role}</span></td>
                 <td>{new Date(u.created_at).toLocaleDateString('mn-MN')}</td>
+                <td>
+                  <button className="secondary" onClick={() => changePassword(u)} style={{ marginRight: 6 }}>Нууц үг солих</button>
+                  {u.id !== me?.id && (
+                    <button className="danger" onClick={() => removeUser(u)}>Устгах</button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
